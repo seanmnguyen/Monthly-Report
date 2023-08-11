@@ -28,4 +28,3 @@ def get_extension(path):
     lst = path.split(".")
     return lst[len(lst) - 1]
 
-    
