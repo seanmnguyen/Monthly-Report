@@ -3,43 +3,9 @@ from tkinter import *
 from tkinter.filedialog import askopenfile, askopenfilenames
 from datetime import datetime
 import csv
-# from funcs import *
-
-# header for the final spreadsheet
-FINAL_HEADER = ["Patients", "U & C", "CA", "CK", "CC", "DB", "RB", 
-                "INS", "RF", "Total", "G", "C", "I", "D", "T", "F", 
-                "O", "L", "DK", "M", "S", "D3", "AO", "N", "P", "T"]
-PAY_REP_COLS = 60  # number of columns in pay rep sheet
-FINAL_COLS = 26  # number of columns in final sheet
-
-# constannts for the index of each column in the pay rep sheet
-DATE = 0
-NAME = 1
-SERVICE_CODES = 2
-BILLING_CODES = 3
-FEES = 4
-FEES_TOTAL = 5
-FEES_PAT = 6
-FEES_PAT_TOTAL = 7
-FEES_INS = 8
-PAID = 9
-PAID_PAT = 10
-PAID_INS = 11
-ADJUSTMENTS = 12
-INVOICE = 13
-BALANCE = 14
-PREV_BALANCE = 15
-PAY_TYPE = 16
-CASH = 17
-CHECK = 18
-CREDIT_CARD = 19
-INSURANCE = 20
-DOCTOR = 21
-SALES_PERSON = 22
-DESCRIPTIONS = 23
-FRAME_INFO = 24
-LOC_ID = 25
-INS_CC = 26
+from funcs import *
+import pay_rep
+import final
 
 
 
@@ -64,7 +30,7 @@ def parse_pay_rep(pay_rep, final_name="Monthly Report Final"):
         # iterate over each row, add header to new file, parse info
         for row in csv_reader:
             # error checks input file, compares number of columns
-            if not col_check and len(row) < PAY_REP_COLS:
+            if not col_check and len(row) < pay_rep.NUM_COLS:
                 print("parse_pay_rep --> file column nums mismatch: " + pay_rep)
                 in_file.close()
                 out_file.close()
@@ -74,20 +40,45 @@ def parse_pay_rep(pay_rep, final_name="Monthly Report Final"):
             
             # if first row, add header
             if header is True:
-                csv_writer.writerow(FINAL_HEADER)
+                csv_writer.writerow(final.HEADER)
                 header = False
             else:  # not first row, parse info from pay rep to final
                 row_info = []  # holds info for each cell in row
 
                 if date == "":  # get first date
-                    date = row[DATE]
+                    date = row[pay_rep.DATE]
                 else:  # compare for date changes
-                    temp = row[DATE]
+                    temp = row[pay_rep.DATE]
                     if date != temp:  # new date --> insert old date + blank line
-                        blank_row = [""] * FINAL_COLS
+                        blank_row = [""] * final.NUM_COLS
                         csv_writer.writerow(date, blank_row[1:])
                         csv_writer.writerow(blank_row) 
                         date = temp  # update to new date
 
                 # add the rest of the information into the row
-                parse_name()
+                row_info[final.PATIENT] = parse_patient()
+                row_info[final.U_C] = parse_u_c()
+                row_info[final.CASH] = parse_cash()
+                row_info[final.CHECK] = parse_check()
+                row_info[final.CREDIT_CARD] = parse_credit_card()
+                row_info[final.DEBIT] = parse_debit()
+                row_info[final.REINBURSE] = parse_reinburse()
+                row_info[final.INS] = parse_insurance()
+                row_info[final.RF] = parse_rf()
+                row_info[final.TOTAL] = parse_total()
+                row_info[final.G] = parse_g()
+                row_info[final.C] = parse_c()
+                row_info[final.I] = parse_i()
+                row_info[final.D] = parse_d()
+                row_info[final.T] = parse_t()
+                row_info[final.F] = parse_f()
+                row_info[final.O] = parse_o()
+                row_info[final.L] = parse_l()
+                row_info[final.DK] = parse_dk()
+                row_info[final.M] = parse_m()
+                row_info[final.S] = parse_s()
+                row_info[final.D3] = parse_d3()
+                row_info[final.AO] = parse_ao()
+                row_info[final.N] = parse_n()
+                row_info[final.P] = parse_p()
+                row_info[final.T] = parse_t()
