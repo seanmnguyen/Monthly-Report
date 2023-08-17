@@ -8,30 +8,34 @@ import pay_rep
 import final
 
 
-def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final"):
+def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
     # open the pay rep file using csv reader
     with open(pay_rep_file, mode='r') as in_file:
         try:
             csv_reader = csv.reader(in_file)
-        except(IOError):
+        except(FileNotFoundError):
             print("invalid csv file for pay rep")
-            return str(IOError) + "Error, pay rep"
+            return str(FileNotFoundError)
         
         # create new file for the final spreadsheet
         try:
             out_file = open(final_name, mode="w", newline="")
-        except(IOError):
+        except(FileNotFoundError):
             print("invalid new name for report")
-            return str(IOError) + "Error, final name"
+            print("hi")
+            return str(FileNotFoundError)
         try:
             csv_writer = csv.writer(out_file, dialect="excel")
-        except(IOError):
+        except(FileNotFoundError):
             print("error with csv writer for out file")
-            return str(IOError) + "Error, csv writer"
+            return str(FileNotFoundError)
 
+        print("test")
         header = True  # True == header is needed, False == header not needed
         col_check = False  # True == number of columns match, False == no match
-        sheet = []  # 2D matrix holding sheet data
+        sheet = [[""]] * len(pd.read_csv(in_file))  # 2D matrix holding sheet data
+        # print(sheet)
+        # print(len(sheet))
         date = ""  # "" == initial date not set, keeps track of current date
         date_start = 0  # index of the first row for the current date
         date_end = 0  # index of the last row for the current date
@@ -41,6 +45,7 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final"):
         # iterate over each row, add header to new file, parse info
         for row in csv_reader:
             # error checks input file, compares number of columns
+            print(row)
             if not col_check and len(row) < pay_rep.NUM_COLS:
                 print("parse_pay_rep --> file column nums mismatch: " + pay_rep)
                 in_file.close()
@@ -67,13 +72,13 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final"):
                         # # NOTE: T col = sum(G + C)
                         date_indices.append(date_end + 1)
                         if first_day:
-                            end_of_date(csv_writer, date, date_start, date_end, True, date_indices)
+                            end_of_date(sheet, date, date_start, date_end, True, date_indices)
                             first_day = False
                             # reset day index counter
                             date_start = date_end + 3  # skip day total and line space
                             date_end += 3
                         else:
-                            end_of_date(csv_writer, date, date_start, date_end, False, date_indices)
+                            end_of_date(sheet, date, date_start, date_end, False, date_indices)
                             # reset day index counter
                             date_start = date_end + 4  # skip day total, cum total, and line space
                             date_end += 4
@@ -100,33 +105,36 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final"):
                 codes_arr = codes.split("|")
                 contacts = parse_c(codes_arr)
                 if contacts:  # if parse_c returns true
-                    row_info[final.C] = 1  # set c to 1
-                    row_info[final.G] = ""  # automatically set g to empty
-                    row_info[final.F] = ""  # automatically set F to empty
+                    row_info[final.CONTACTS] = 1  # set c to 1
+                    row_info[final.GLASSES] = ""  # automatically set g to empty
+                    row_info[final.FITTING] = ""  # automatically set F to empty
                 else:
-                    row_info[final.G] = parse_g(codes_arr)
-                    row_info[final.F] = parse_f(codes_arr)
-                row_info[final.I] = parse_i(codes_arr)
-                row_info[final.D] = parse_d(codes_arr)
-                row_info[final.T] = parse_t(codes_arr)
-                row_info[final.O] = parse_o()
-                row_info[final.L] = parse_l()
-                row_info[final.DK] = parse_dk()
-                row_info[final.M] = parse_m()
-                row_info[final.S] = parse_s()
-                row_info[final.D3] = parse_d3()
-                row_info[final.OA] = parse_oa()
-                row_info[final.N] = parse_n()
-                row_info[final.P] = parse_p()
-                row_info[final.T] = ""
+                    row_info[final.GLASSES] = parse_g(codes_arr)
+                    row_info[final.FITTING] = parse_f(codes_arr)
+                row_info[final.INS] = parse_i(codes_arr)
+                row_info[final.DILATION] = parse_d(codes_arr)
+                row_info[final.TOPOGRAPHY] = parse_t(codes_arr)
+                row_info[final.OFFICE_VISIT] = parse_o(codes_arr)
+                row_info[final.LASIK] = parse_l(codes_arr)
+                row_info[final.DRY_EYE_KIT] = parse_dk(codes_arr)
+                row_info[final.MASK] = parse_m(codes_arr)
+                row_info[final.SPRAY] = parse_s(codes_arr)
+                row_info[final.D3] = parse_d3(codes_arr)
+                row_info[final.OA] = parse_oa(codes_arr)
+                row_info[final.NEW_PAT] = parse_n(codes_arr)
+                row_info[final.PREVIOUS_PAT] = parse_p(codes_arr)
+                row_info[final.TOTAL_PAT] = ""
 
                 # finish parsing row, add to matrix
                 sheet.append(row_info)
+                print(sheet)
+                print(len(sheet))
     # write entire sheet matrix, close files, return new sheet name
-    csv_writer.writerow(sheet)
+    csv_writer.writerows(sheet)
     in_file.close()
     out_file.close()
-    return out_file
+    print("all done")
+    return final_name
 
 
 # takes invoice file name and patient's name
@@ -138,9 +146,9 @@ def parse_insurance(invoice_sheet, pat_name):
     with open(invoice_sheet, mode='r') as in_file:
         try:
             invoice_reader = csv.reader(in_file)
-        except(IOError):
+        except(FileNotFoundError):
             print("invalid invoice file")
-            return str(IOError) + "Error, invoice file"
+            return str(FileNotFoundError)
         
         for row in invoice_reader:
             print(row)
@@ -279,7 +287,7 @@ def parse_p(codes:list):
 
 def end_of_date(sheet_matrix, date, start_date, end_date, first_day, date_list):
     day_total = [""] * final.NUM_COLS
-    day_total[final.PATEINT] = date
+    day_total[final.PATIENT] = date
     for col in range(final.U_C, final.REINBURSE + 1, 1):
         day_total[col] = sum_col(sheet_matrix, col, start_date, end_date)
     day_total[final.REFUND] = sum_col(sheet_matrix, final.REFUND, start_date, end_date)
@@ -332,4 +340,5 @@ def sum_cum(sheet_matrix, col, date_indices):
 
 test_pay_rep = "payRep08_06_2023.csv"
 test_invoice = "invoice08_06_2023.csv"
-parse_pay_rep(test_pay_rep, test_invoice, "test_final.csv")
+res = parse_pay_rep(test_pay_rep, test_invoice, "test_final.csv")
+print(res)
