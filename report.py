@@ -8,9 +8,9 @@ import pay_rep
 import final
 
 
-def parse_pay_rep(pay_rep, final_name="Monthly Report Final", invoice):
+def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final"):
     # open the pay rep file using csv reader
-    with open(pay_rep, mode='r') as in_file:
+    with open(pay_rep_file, mode='r') as in_file:
         try:
             csv_reader = csv.reader(in_file)
         except(IOError):
@@ -54,7 +54,7 @@ def parse_pay_rep(pay_rep, final_name="Monthly Report Final", invoice):
                 csv_writer.writerow(final.HEADER)
                 header = False
             else:  # not first row, parse info from pay rep to final
-                row_info = [] * final.NUM_COLS # holds info for each cell in row
+                row_info = [""] * final.NUM_COLS # holds info for each cell in row
 
                 if date == "":  # get first date
                     date = row[pay_rep.DATE]
@@ -79,7 +79,7 @@ def parse_pay_rep(pay_rep, final_name="Monthly Report Final", invoice):
                             date_end += 4
                     else:  # same date, increment date end index counter
                         date_end += 1
-
+                        
                 # add the rest of the information into the row
                 row_info[final.PATIENT] = row[pay_rep.PATIENT]
                 row_info[final.U_C] = parse_u_c(row)
@@ -134,33 +134,36 @@ def parse_pay_rep(pay_rep, final_name="Monthly Report Final", invoice):
 def parse_insurance(invoice_sheet, pat_name):
     name_col = 1  # column index for patient name
     ins_col = 4  # column index for patient insurance
-    try:
-        invoice_reader = csv.reader(invoice_sheet)
-    except(IOError):
-        print("invalid invoice file")
-        return str(IOError) + "Error, invoice file"
-    
-    for row in invoice_reader:
-        if row[name_col] == pat_name:
-            return row[ins_col]
+
+    with open(invoice_sheet, mode='r') as in_file:
+        try:
+            invoice_reader = csv.reader(in_file)
+        except(IOError):
+            print("invalid invoice file")
+            return str(IOError) + "Error, invoice file"
+        
+        for row in invoice_reader:
+            print(row)
+            if row[name_col] == pat_name:
+                return row[ins_col]
 
     return None
 
 # takes 1 row of information, returns the Fees Total column
 # but, if the value in Paid Ins is non-zero, returns Fees Total - 70
 def parse_u_c(info):
-    fees_total = int(info[pay_rep.FEES_TOTAL])
-    paid_ins = int(info[pay_rep.PAID_INS])
+    fees_total = float(info[pay_rep.FEES_TOTAL])
+    paid_ins = float(info[pay_rep.PAID_INS])
     if paid_ins > 0:  # value in Paid Ins is non-zero
-        return fees_total - 70
-    return fees_total
+        return int(fees_total) - 70
+    return int(fees_total)
 
 # takes 1 row, returns the amount paid via credit card (0 possible)
 # there are 4 possible credit cards: VISA, Master, Amex, Discover
 # at most 1 will be used, but it is possible for none to be used
 def parse_credit_card(info):
     for i in range(pay_rep.VISA, pay_rep.DISCOVER + 1, 1):
-        if int(info[i]) > 0:
+        if float(info[i]) > 0:
             return info[i]
     return 0
 
@@ -325,3 +328,8 @@ def sum_cum(sheet_matrix, col, date_indices):
         if sheet_matrix[index][col] != "":
             total += int(sheet_matrix[index][col])
     return total
+
+
+test_pay_rep = "payRep08_06_2023.csv"
+test_invoice = "invoice08_06_2023.csv"
+parse_pay_rep(test_pay_rep, test_invoice, "test_final.csv")
