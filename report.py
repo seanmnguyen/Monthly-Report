@@ -8,18 +8,26 @@ import pay_rep
 import final
 
 
-def parse_pay_rep(pay_rep, final_name="Monthly Report Final"):
+def parse_pay_rep(pay_rep, final_name="Monthly Report Final", invoice):
     # open the pay rep file using csv reader
     with open(pay_rep, mode='r') as in_file:
         try:
             csv_reader = csv.reader(in_file)
         except(IOError):
             print("invalid csv file for pay rep")
-            return
+            return str(IOError) + "Error, pay rep"
         
         # create new file for the final spreadsheet
-        out_file = open(final_name, mode="w", newline="")
-        csv_writer = csv.writer(out_file, dialect="excel")
+        try:
+            out_file = open(final_name, mode="w", newline="")
+        except(IOError):
+            print("invalid new name for report")
+            return str(IOError) + "Error, final name"
+        try:
+            csv_writer = csv.writer(out_file, dialect="excel")
+        except(IOError):
+            print("error with csv writer for out file")
+            return str(IOError) + "Error, csv writer"
 
         header = True  # True == header is needed, False == header not needed
         col_check = False  # True == number of columns match, False == no match
@@ -37,7 +45,7 @@ def parse_pay_rep(pay_rep, final_name="Monthly Report Final"):
                 print("parse_pay_rep --> file column nums mismatch: " + pay_rep)
                 in_file.close()
                 out_file.close()
-                return -1
+                return None
             else:
                 col_check = True
             
@@ -53,10 +61,6 @@ def parse_pay_rep(pay_rep, final_name="Monthly Report Final"):
                 else:  # compare for date changes
                     temp = row[pay_rep.DATE]
                     if date != temp:  # new date --> insert old date + blank line
-                        # blank_row = [""] * final.NUM_COLS
-                        # csv_writer.writerow(date, blank_row[1:])
-                        # csv_writer.writerow(blank_row) 
-                        # date = temp  # update to new date
                         # # TODO: add two lines, first line has date in row[0], and totals in rest of cols
                         # # second line = cumulative totals --> make separate function
                         # # NOTE: Total col = sum(CA, RB)
@@ -84,7 +88,11 @@ def parse_pay_rep(pay_rep, final_name="Monthly Report Final"):
                 row_info[final.CREDIT_CARD] = parse_credit_card(row)
                 row_info[final.DEBIT] = row[pay_rep.DEBIT_CARD]
                 row_info[final.REINBURSE] = row[pay_rep.PAID_INS]
-                # row_info[final.INS] = parse_insurance()  # from invoice sheet
+                insurance = parse_insurance(invoice, row[pay_rep.PATIENT])
+                if insurance is None:
+                    print(row[pay_rep.PATIENT] + ": insurance not found")
+                    return None
+                row_info[final.INS] = insurance  # from invoice sheet
                 row_info[final.REFUND] = ""
                 row_info[final.TOTAL] = ""
                 # info using billing codes below
@@ -114,8 +122,29 @@ def parse_pay_rep(pay_rep, final_name="Monthly Report Final"):
 
                 # finish parsing row, add to matrix
                 sheet.append(row_info)
+    # write entire sheet matrix, close files, return new sheet name
+    csv_writer.writerow(sheet)
+    in_file.close()
+    out_file.close()
+    return out_file
 
 
+# takes invoice file name and patient's name
+# returns the insurance type for the patient
+def parse_insurance(invoice_sheet, pat_name):
+    name_col = 1  # column index for patient name
+    ins_col = 4  # column index for patient insurance
+    try:
+        invoice_reader = csv.reader(invoice_sheet)
+    except(IOError):
+        print("invalid invoice file")
+        return str(IOError) + "Error, invoice file"
+    
+    for row in invoice_reader:
+        if row[name_col] == pat_name:
+            return row[ins_col]
+
+    return None
 
 # takes 1 row of information, returns the Fees Total column
 # but, if the value in Paid Ins is non-zero, returns Fees Total - 70
@@ -140,13 +169,6 @@ def parse_credit_card(info):
 # SPH, PREM, STY, or CUS; returns 0 otherwise
 # NOTE: if return 1, then parse_g automatically returns 0 or false
 def parse_c(codes:list):
-    # key1 = ["4", "14", "s0", "s1"]  # first key checks
-    # key2 = ["SPH", "PREM", "STY", "CUS"]  # second key checks
-    # matches = [s for s in codes if s in key1]  # make array for matches in key1
-    # if len(matches) > 0:  # if there are any matches, check key2
-    #     return len([s for s in codes if s in key2]) > 0 
-    # return False
-
     if "4" in codes or "14" in codes or "s0" in codes or "s1" in codes:
         if "SPH" in codes or "PREM" in codes or "STY" in codes or "CUS" in codes:
             return True
@@ -257,32 +279,11 @@ def end_of_date(sheet_matrix, date, start_date, end_date, first_day, date_list):
     day_total[final.PATEINT] = date
     for col in range(final.U_C, final.REINBURSE + 1, 1):
         day_total[col] = sum_col(sheet_matrix, col, start_date, end_date)
-    # day_total[final.U_C] = sum_col(sheet_matrix, final.U_C, start_date, end_date)
-    # day_total[final.CASH] = sum_col(sheet_matrix, final.CASH, start_date, end_date)
-    # day_total[final.CHECK] = sum_col(sheet_matrix, final.CHECK, start_date, end_date)
-    # day_total[final.CREDIT_CARD] = sum_col(sheet_matrix, final.CREDIT_CARD, start_date, end_date)
-    # day_total[final.DEBIT] = sum_col(sheet_matrix, final.DEBIT, start_date, end_date)
-    # day_total[final.REINBURSE] = sum_col(sheet_matrix, final.REINBURSE, start_date, end_date)
     day_total[final.REFUND] = sum_col(sheet_matrix, final.REFUND, start_date, end_date)
     day_total[final.TOTAL] = sum_row(day_total, final.CASH, final.REINBURSE)
     
     for col in range(final.GLASSES, final.PREVIOUS_PAT + 1, 1):
         day_total[col] = sum_col(sheet_matrix, col, start_date, end_date)
-    # day_total[final.GLASSES] = sum_col(sheet_matrix, final.GLASSES, start_date, end_date)
-    # day_total[final.CONTACTS] = sum_col(sheet_matrix, final.CONTACTS, start_date, end_date)
-    # day_total[final.IMAGE] = sum_col(sheet_matrix, final.IMAGE, start_date, end_date)
-    # day_total[final.DILATION] = sum_col(sheet_matrix, final.DILATION, start_date, end_date)
-    # day_total[final.TOPOGRAPHY] = sum_col(sheet_matrix, final.TOPOGRAPHY, start_date, end_date)
-    # day_total[final.FITTING] = sum_col(sheet_matrix, final.FITTING, start_date, end_date)
-    # day_total[final.OFFICE_VISIT] = sum_col(sheet_matrix, final.OFFICE_VISIT, start_date, end_date)
-    # day_total[final.LASIK] = sum_col(sheet_matrix, final.LASIK, start_date, end_date)
-    # day_total[final.DRY_EYE_KIT] = sum_col(sheet_matrix, final.DRY_EYE_KIT, start_date, end_date)
-    # day_total[final.MASK] = sum_col(sheet_matrix, final.MASK, start_date, end_date)
-    # day_total[final.SPRAY] = sum_col(sheet_matrix, final.SPRAY, start_date, end_date)
-    # day_total[final.D3] = sum_col(sheet_matrix, final.D3, start_date, end_date)
-    # day_total[final.OA] = sum_col(sheet_matrix, final.OA, start_date, end_date)
-    # day_total[final.NEW_PAT] = sum_col(sheet_matrix, final.NEW_PAT, start_date, end_date)
-    # day_total[final.PREVIOUS_PAT] = sum_col(sheet_matrix, final.PREVIOUS_PAT, start_date, end_date)
     day_total[final.TOTAL_PAT] = day_total[final.GLASSES] + day_total[final.CONTACTS]
 
     sheet_matrix.append(day_total)
