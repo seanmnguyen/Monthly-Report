@@ -10,12 +10,15 @@ import final
 
 def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
     # open the pay rep file using csv reader
-    with open(pay_rep_file, mode='r') as in_file:
-        try:
-            csv_reader = csv.reader(in_file)
-        except(FileNotFoundError):
-            print("invalid csv file for pay rep")
-            return str(FileNotFoundError)
+    with open("payRep08_06_2023.csv", mode='r') as in_file:
+        csv_reader = csv.reader(in_file)
+        # try:
+        #     print(in_file.readline())
+        #     csv_reader = csv.reader(in_file)
+        #     print("open successful: " + pay_rep_file)
+        # except(FileNotFoundError):
+        #     print("invalid csv file for pay rep")
+        #     return str(FileNotFoundError)
         
         # create new file for the final spreadsheet
         try:
@@ -42,10 +45,15 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
         date_indices = []
         first_day = True
 
+        print(csv_reader)
+        print(csv_reader.line_num)
+
         # iterate over each row, add header to new file, parse info
         for row in csv_reader:
-            # error checks input file, compares number of columns
+            print("in a row")
             print(row)
+
+            # error checks input file, compares number of columns
             if not col_check and len(row) < pay_rep.NUM_COLS:
                 print("parse_pay_rep --> file column nums mismatch: " + pay_rep)
                 in_file.close()
@@ -338,7 +346,7 @@ def sum_cum(sheet_matrix, col, date_indices):
     return total
 
 
-test_pay_rep = "payRep08_06_2023.csv"
-test_invoice = "invoice08_06_2023.csv"
+test_invoice = "C:/Users/Sean/Documents/GitHub/Monthly-Report/invoice08_06_2023.csv"
+test_pay_rep = "C:/Users/Sean/Documents/GitHub/Monthly-Report/payRep08_06_2023.csv" 
 res = parse_pay_rep(test_pay_rep, test_invoice, "test_final.csv")
 print(res)
