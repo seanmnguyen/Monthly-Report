@@ -7,9 +7,15 @@ from funcs import *
 import pay_rep
 import final
 
+DAYS = 1000
+
 
 def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
     # open the pay rep file using csv reader
+    with open(pay_rep_file, mode='r') as in_file:
+        sheet = [[""]] * (len(pd.read_csv(in_file)) + DAYS) # 2D matrix holding sheet data
+        in_file.close()
+
     with open("payRep08_06_2023.csv", mode='r') as in_file:
         csv_reader = csv.reader(in_file)
         # try:
@@ -25,7 +31,6 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
             out_file = open(final_name, mode="w", newline="")
         except(FileNotFoundError):
             print("invalid new name for report")
-            print("hi")
             return str(FileNotFoundError)
         try:
             csv_writer = csv.writer(out_file, dialect="excel")
@@ -36,7 +41,6 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
         print("test")
         header = True  # True == header is needed, False == header not needed
         col_check = False  # True == number of columns match, False == no match
-        sheet = [[""]] * len(pd.read_csv(in_file))  # 2D matrix holding sheet data
         # print(sheet)
         # print(len(sheet))
         date = ""  # "" == initial date not set, keeps track of current date
@@ -44,15 +48,10 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
         date_end = 0  # index of the last row for the current date
         date_indices = []
         first_day = True
-
-        print(csv_reader)
-        print(csv_reader.line_num)
+        sheet_index = 0
 
         # iterate over each row, add header to new file, parse info
         for row in csv_reader:
-            print("in a row")
-            print(row)
-
             # error checks input file, compares number of columns
             if not col_check and len(row) < pay_rep.NUM_COLS:
                 print("parse_pay_rep --> file column nums mismatch: " + pay_rep)
@@ -74,67 +73,69 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
                 else:  # compare for date changes
                     temp = row[pay_rep.DATE]
                     if date != temp:  # new date --> insert old date + blank line
-                        # # TODO: add two lines, first line has date in row[0], and totals in rest of cols
-                        # # second line = cumulative totals --> make separate function
-                        # # NOTE: Total col = sum(CA, RB)
-                        # # NOTE: T col = sum(G + C)
                         date_indices.append(date_end + 1)
                         if first_day:
-                            end_of_date(sheet, date, date_start, date_end, True, date_indices)
+                            end_of_date(sheet, sheet_index, date, date_start, date_end, True, date_indices)
                             first_day = False
                             # reset day index counter
                             date_start = date_end + 3  # skip day total and line space
                             date_end += 3
+                            sheet_index += 2
                         else:
-                            end_of_date(sheet, date, date_start, date_end, False, date_indices)
+                            end_of_date(sheet, sheet_index, date, date_start, date_end, False, date_indices)
                             # reset day index counter
                             date_start = date_end + 4  # skip day total, cum total, and line space
                             date_end += 4
+                            sheet_index += 3
+                        date = temp
                     else:  # same date, increment date end index counter
                         date_end += 1
                         
                 # add the rest of the information into the row
-                row_info[final.PATIENT] = row[pay_rep.PATIENT]
-                row_info[final.U_C] = parse_u_c(row)
-                row_info[final.CASH] = row[pay_rep.CASH]
-                row_info[final.CHECK] = row[pay_rep.CHECK]
-                row_info[final.CREDIT_CARD] = parse_credit_card(row)
-                row_info[final.DEBIT] = row[pay_rep.DEBIT_CARD]
-                row_info[final.REINBURSE] = row[pay_rep.PAID_INS]
-                insurance = parse_insurance(invoice, row[pay_rep.PATIENT])
-                if insurance is None:
-                    print(row[pay_rep.PATIENT] + ": insurance not found")
-                    return None
-                row_info[final.INS] = insurance  # from invoice sheet
-                row_info[final.REFUND] = ""
-                row_info[final.TOTAL] = ""
-                # info using billing codes below
-                codes = row[pay_rep.BILLING_CODES]
-                codes_arr = codes.split("|")
-                contacts = parse_c(codes_arr)
-                if contacts:  # if parse_c returns true
-                    row_info[final.CONTACTS] = 1  # set c to 1
-                    row_info[final.GLASSES] = ""  # automatically set g to empty
-                    row_info[final.FITTING] = ""  # automatically set F to empty
-                else:
-                    row_info[final.GLASSES] = parse_g(codes_arr)
-                    row_info[final.FITTING] = parse_f(codes_arr)
-                row_info[final.INS] = parse_i(codes_arr)
-                row_info[final.DILATION] = parse_d(codes_arr)
-                row_info[final.TOPOGRAPHY] = parse_t(codes_arr)
-                row_info[final.OFFICE_VISIT] = parse_o(codes_arr)
-                row_info[final.LASIK] = parse_l(codes_arr)
-                row_info[final.DRY_EYE_KIT] = parse_dk(codes_arr)
-                row_info[final.MASK] = parse_m(codes_arr)
-                row_info[final.SPRAY] = parse_s(codes_arr)
-                row_info[final.D3] = parse_d3(codes_arr)
-                row_info[final.OA] = parse_oa(codes_arr)
-                row_info[final.NEW_PAT] = parse_n(codes_arr)
-                row_info[final.PREVIOUS_PAT] = parse_p(codes_arr)
-                row_info[final.TOTAL_PAT] = ""
+                name = row[pay_rep.PATIENT]
+                if name != "Totals":  # check name first to see if at the end of the file
+                    row_info[final.PATIENT] = name
+                    row_info[final.U_C] = parse_u_c(row)
+                    row_info[final.CASH] = row[pay_rep.CASH]
+                    row_info[final.CHECK] = row[pay_rep.CHECK]
+                    row_info[final.CREDIT_CARD] = parse_credit_card(row)
+                    row_info[final.DEBIT] = row[pay_rep.DEBIT_CARD]
+                    row_info[final.REINBURSE] = row[pay_rep.PAID_INS]
+                    insurance = parse_insurance(invoice, row[pay_rep.PATIENT])
+                    if insurance is None:
+                        print(row[pay_rep.PATIENT] + ": insurance not found")
+                        return None
+                    row_info[final.INS] = insurance  # from invoice sheet
+                    row_info[final.REFUND] = ""
+                    row_info[final.TOTAL] = ""
+                    # info using billing codes below
+                    codes = row[pay_rep.BILLING_CODES]
+                    codes_arr = codes.split("|")
+                    contacts = parse_c(codes_arr)
+                    if contacts:  # if parse_c returns true
+                        row_info[final.CONTACTS] = 1  # set c to 1
+                        row_info[final.GLASSES] = ""  # automatically set g to empty
+                        row_info[final.FITTING] = ""  # automatically set F to empty
+                    else:
+                        row_info[final.GLASSES] = parse_g(codes_arr)
+                        row_info[final.FITTING] = parse_f(codes_arr)
+                    row_info[final.INS] = parse_i(codes_arr)
+                    row_info[final.DILATION] = parse_d(codes_arr)
+                    row_info[final.TOPOGRAPHY] = parse_t(codes_arr)
+                    row_info[final.OFFICE_VISIT] = parse_o(codes_arr)
+                    row_info[final.LASIK] = parse_l(codes_arr)
+                    row_info[final.DRY_EYE_KIT] = parse_dk(codes_arr)
+                    row_info[final.MASK] = parse_m(codes_arr)
+                    row_info[final.SPRAY] = parse_s(codes_arr)
+                    row_info[final.D3] = parse_d3(codes_arr)
+                    row_info[final.OA] = parse_oa(codes_arr)
+                    row_info[final.NEW_PAT] = parse_n(codes_arr)
+                    row_info[final.PREVIOUS_PAT] = parse_p(codes_arr)
+                    row_info[final.TOTAL_PAT] = ""
 
                 # finish parsing row, add to matrix
-                sheet.append(row_info)
+                sheet[sheet_index] = row_info
+                sheet_index += 1
                 print(sheet)
                 print(len(sheet))
     # write entire sheet matrix, close files, return new sheet name
@@ -159,7 +160,6 @@ def parse_insurance(invoice_sheet, pat_name):
             return str(FileNotFoundError)
         
         for row in invoice_reader:
-            print(row)
             if row[name_col] == pat_name:
                 return row[ins_col]
 
@@ -168,8 +168,8 @@ def parse_insurance(invoice_sheet, pat_name):
 # takes 1 row of information, returns the Fees Total column
 # but, if the value in Paid Ins is non-zero, returns Fees Total - 70
 def parse_u_c(info):
-    fees_total = float(info[pay_rep.FEES_TOTAL])
-    paid_ins = float(info[pay_rep.PAID_INS])
+    fees_total = float(info[pay_rep.FEES_TOTAL].replace(",", ''))
+    paid_ins = float(info[pay_rep.PAID_INS].replace(",", ''))
     if paid_ins > 0:  # value in Paid Ins is non-zero
         return int(fees_total) - 70
     return int(fees_total)
@@ -179,7 +179,7 @@ def parse_u_c(info):
 # at most 1 will be used, but it is possible for none to be used
 def parse_credit_card(info):
     for i in range(pay_rep.VISA, pay_rep.DISCOVER + 1, 1):
-        if float(info[i]) > 0:
+        if float(info[i].replace(",", '')) > 0:
             return info[i]
     return 0
 
@@ -293,7 +293,7 @@ def parse_p(codes:list):
         return "1"
     return ""
 
-def end_of_date(sheet_matrix, date, start_date, end_date, first_day, date_list):
+def end_of_date(sheet_matrix, sheet_index, date, start_date, end_date, first_day, date_list):
     day_total = [""] * final.NUM_COLS
     day_total[final.PATIENT] = date
     for col in range(final.U_C, final.REINBURSE + 1, 1):
@@ -305,7 +305,8 @@ def end_of_date(sheet_matrix, date, start_date, end_date, first_day, date_list):
         day_total[col] = sum_col(sheet_matrix, col, start_date, end_date)
     day_total[final.TOTAL_PAT] = day_total[final.GLASSES] + day_total[final.CONTACTS]
 
-    sheet_matrix.append(day_total)
+    sheet_matrix[sheet_index] = day_total
+    sheet_index += 1
 
     if not first_day:  # not first day, add cumlative row
         cum_total = [""] * final.NUM_COLS
@@ -318,18 +319,18 @@ def end_of_date(sheet_matrix, date, start_date, end_date, first_day, date_list):
             cum_total[col] = sum_cum(sheet_matrix, col, date_list)
         cum_total[final.TOTAL_PAT] = cum_total[final.GLASSES] + cum_total[final.CONTACTS]
 
-        sheet_matrix.append(cum_total)
-
-    # add blank row for formatting
-    sheet_matrix.append([""] * final.NUM_COLS)  
+        sheet_matrix[sheet_index] = cum_total
 
 
 def sum_col(sheet_matrix, col, start, end):
-    total = 0
+    total = 0.0
+    print("\n\nsheet row count: " + str(len(sheet_matrix)))
+    print("start: " + str(start) + ", end: " + str(end))
     for row in range(start, end + 1, 1):
+        print("row: " + str(row) + ", col: " + str(col) + "\n\n")
         if sheet_matrix[row][col] != "":
-            total += int(sheet_matrix[row][col])
-    return total
+            total += float(sheet_matrix[row][col])
+    return int(total)
 
 def sum_row(row, start, end):
     total = 0
@@ -346,7 +347,7 @@ def sum_cum(sheet_matrix, col, date_indices):
     return total
 
 
-test_invoice = "C:/Users/Sean/Documents/GitHub/Monthly-Report/invoice08_06_2023.csv"
-test_pay_rep = "C:/Users/Sean/Documents/GitHub/Monthly-Report/payRep08_06_2023.csv" 
+test_invoice = "invoice08_06_2023.csv"
+test_pay_rep = "payRep08_06_2023.csv" 
 res = parse_pay_rep(test_pay_rep, test_invoice, "test_final.csv")
 print(res)
