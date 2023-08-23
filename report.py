@@ -7,13 +7,13 @@ from funcs import *
 import pay_rep
 import final
 
-DAYS = 1000
+DAYS = 30
 
 
 def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
     # open the pay rep file using csv reader
     with open(pay_rep_file, mode='r') as in_file:
-        sheet = [[""]] * (len(pd.read_csv(in_file)) + DAYS) # 2D matrix holding sheet data
+        sheet = [[""]] * (len(pd.read_csv(in_file)) + DAYS*3) # 2D matrix holding sheet data
         in_file.close()
 
     with open("payRep08_06_2023.csv", mode='r') as in_file:
@@ -116,7 +116,7 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
                     else:
                         row_info[final.GLASSES] = parse_g(codes_arr)
                         row_info[final.FITTING] = parse_f(codes_arr)
-                    row_info[final.INS] = parse_i(codes_arr)
+                    row_info[final.IMAGE] = parse_i(codes_arr)
                     row_info[final.DILATION] = parse_d(codes_arr)
                     row_info[final.TOPOGRAPHY] = parse_t(codes_arr)
                     row_info[final.OFFICE_VISIT] = parse_o(codes_arr)
