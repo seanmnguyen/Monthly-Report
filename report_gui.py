@@ -8,14 +8,14 @@ from report import *
 PAY_REP_PROMPT = "<---- Select a Pay Rep File For The Month"
 INVOICE_PROMPT = "<---- Select an Invoice File For The Month"
 NAME_PROMPT = "Insert Name For New Monthly Report"
-SUCCESS_STATUS = "success"
-NO_PAY_REP_STATUS = "missing pay rep"
-NO_INVOICE_STATUS = "missing invoice"
-NO_BOTH_STATUS = "missing both files"
-ERROR_STATUS = "error"
+PAY_REP_STATUS = 0
+INVOICE_STATUS = 1
+CREATE_STATUS = 2
+status_num = [False, False, False]  # [pay_rep, invoice, created_successfully]
 
 # takes file from pay rep text and invoice text, creates monthly report
 def create_report():
+    global status_num
     pay_rep_name = pay_rep_text.get()
     invoice_name = invoice_text.get()
 
@@ -44,26 +44,33 @@ def create_report():
     # clean up: delete intermediate csv file
     os.remove(csv_name)
 
-    update_status("success")  # updates the status text field
+    status_num[CREATE_STATUS] = True
+    update_status()  # updates the status text field
 
     return report_xlsx
 
 # opens file explorer, lets user select csv file for pay rep
 def select_pay_rep():
+    global status_num
     file = askopenfile(parent=root, mode="r", title="Choose a file", filetype=[("CSV file", "*.csv")])
     if file:
         pay_rep_text.set(file.name)
+        status_num[PAY_REP_STATUS] = True 
     else:  # error or file not chosen
         print("pay rep: no file chosen")
+    update_status()  # updates status text field
 
 
 # opens file explorer, lets user select csv file for invoice
 def select_invoice():
+    global status_num
     file = askopenfile(parent=root, mode="r", title="Choose a file", filetype=[("CSV file", "*.csv")])
     if file:
         invoice_text.set(file.name)
+        status_num[INVOICE_STATUS] = True
     else:  # error or file not chosen
         print("invoice: no file chosen")
+    update_status()  # updates status text field
 
 
 # erases text in name text entry when clicked
@@ -72,22 +79,31 @@ def erase_entry(junk):
         name_text.set("")
     
 
-# # update the status text field
-# def update_status(status):
-#     match status:
-#         case SUCCESS_STATUS:
-#             status_info_text.set("Status: report created successfully!")
-#         case NO_PAY_REP_STATUS:
-#             return
-#         case NO_INVOICE_STATUS:
-#             print("")
-#         case NO_BOTH_STATUS:
-#             print("")
-#         case ERROR_STATUS:
-#             print("")
-#         case _:
-#             return
-#     return    
+# update the status text field
+def update_status():
+    global status_num
+    if status_num[CREATE_STATUS] is True:  # created successfully
+        status_info_text.set("Status: report created successfully!")
+    elif status_num[PAY_REP_STATUS] is True:
+        if status_num[INVOICE_STATUS] is True:  # both true, set to "ready"
+            status_info_text.set("Status: ready to create report")
+        else:  # only have pay rep, missing invoice
+            status_info_text.set("Status: missing invoice")
+    else:  # pay rep missing
+        if status_num[INVOICE_STATUS] is True:  # only invoice, missing pay rep
+            status_info_text.set("Status: missing pay rep")
+        else:  # missing both
+            status_info_text.set("Status: select files")
+
+
+# resets name entry, pay rep, and invoice text field to default prompt
+def reset_fields():
+    global status_num
+    pay_rep_text.set(PAY_REP_PROMPT)
+    invoice_text.set(INVOICE_PROMPT)
+    name_text.set(NAME_PROMPT)
+    status_num = [False, False, False]
+    update_status()
 
 
 # create the GUI
@@ -95,8 +111,8 @@ root = Tk()
 frame = ttk.Frame(root, height=350, width=850, padding=15)
 frame.grid(rowspan=5, columnspan=4)
 root.rowconfigure(0, minsize=60, pad=30)
-root.columnconfigure(0, minsize=5, pad=0)
-root.columnconfigure(1, minsize=80, pad=1)
+root.columnconfigure(0, minsize=5, pad=5)
+root.columnconfigure(1, minsize=80, pad=10)
 root.columnconfigure(2, minsize=80, pad=10)
 root.columnconfigure(3, minsize=80, pad=10)
 
@@ -126,23 +142,23 @@ invoice_lbl.grid(row=2, column=1, columnspan=3)
 # text entry for the name of the new report
 name_text = StringVar()
 name_text.set(NAME_PROMPT)
-name_input = ttk.Entry(root, textvariable=name_text, width=45, font=("Helvectia", 12))
-name_input.grid(row=3, column=1, columnspan=3)
+name_input = ttk.Entry(root, textvariable=name_text, width=75, font=("Helvectia", 12))
+name_input.grid(row=3, column=0, columnspan=4)
 name_input.bind("<Button-1>", erase_entry)  # makes text disappear when clicked on
 
 # button to parse files, create monthly report
 create_btn = ttk.Button(root, text="Create", command=create_report, padding=10)
-create_btn.grid(row=3, column=0)
+create_btn.grid(row=4, column=1)
 
 # status label
-status_lbl = ttk.Label(root, text="Status: ", font=("Helvectia", 10))
+status_info_text = StringVar()
+status_info_text.set("Status: select files")
+status_lbl = ttk.Label(root, textvariable=status_info_text, font=("Helvectia", 12, "italic"))
 status_lbl.grid(row=4, column=0)
 
-# status info text label
-status_info_text = StringVar()
-status_info_text.set("Select files")
-status_info_lbl = ttk.Label(root, textvariable=status_info_text, font=("Helvectia", 10))
-status_info_lbl.grid(row=4, column=1)
+# clear button: resets pay rep, invoice, and name entry text fields to default prompts
+clear_btn = ttk.Button(root, text="Clear", command=reset_fields, padding=10)
+clear_btn.grid(row=4, column=2)
 
 # quit button
 quit_btn = ttk.Button(root, text="Quit", command=root.destroy, padding=10)
