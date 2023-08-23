@@ -4,7 +4,7 @@ import os
 
 
 # converts an inputted csv file to an excel file
-def csv_to_excel(csv_file, excel_name="Monthly Report Final"):
+def csv_to_excel(csv_file, excel_name="Monthly Report.xlsx"):
     reader = pd.read_csv(csv_file)
     reader.to_excel(excel_name, sheet_name=excel_name, index=False)
     return excel_name

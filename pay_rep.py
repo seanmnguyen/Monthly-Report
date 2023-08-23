@@ -1,6 +1,6 @@
 NUM_COLS = 60  # number of columns in pay rep sheet
 
-# constannts for the index of each column in the pay rep sheet
+# constants for the index of each column in the pay rep sheet
 DATE = 0
 PATIENT = 1
 BILLING_CODES = 3

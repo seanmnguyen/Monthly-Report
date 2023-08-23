@@ -38,11 +38,8 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
             print("error with csv writer for out file")
             return str(FileNotFoundError)
 
-        print("test")
         header = True  # True == header is needed, False == header not needed
         col_check = False  # True == number of columns match, False == no match
-        # print(sheet)
-        # print(len(sheet))
         date = ""  # "" == initial date not set, keeps track of current date
         date_start = 0  # index of the first row for the current date
         date_end = 0  # index of the last row for the current date
@@ -136,13 +133,10 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
                 # finish parsing row, add to matrix
                 sheet[sheet_index] = row_info
                 sheet_index += 1
-                print(sheet)
-                print(len(sheet))
     # write entire sheet matrix, close files, return new sheet name
     csv_writer.writerows(sheet)
     in_file.close()
     out_file.close()
-    print("all done")
     return final_name
 
 
@@ -197,7 +191,9 @@ def parse_c(codes:list):
 # returns str "1" if list contains 4, 14, s0, or s1; empty string "" otherwise
 # NOTE: only run if C not set
 def parse_g(codes:list):
-    return "4" in codes or "14" in codes or "s0" in codes or "s1" in codes
+    if "4" in codes or "14" in codes or "s0" in codes or "s1" in codes:
+        return "1"
+    return ""
 
 # takes in list of billing codes
 # returns str "1" if list contains "SPH, PREM, STY, or CUS"; 
@@ -324,10 +320,10 @@ def end_of_date(sheet_matrix, sheet_index, date, start_date, end_date, first_day
 
 def sum_col(sheet_matrix, col, start, end):
     total = 0.0
-    print("\n\nsheet row count: " + str(len(sheet_matrix)))
-    print("start: " + str(start) + ", end: " + str(end))
+    # print("\n\nsheet row count: " + str(len(sheet_matrix)))
+    # print("start: " + str(start) + ", end: " + str(end))
     for row in range(start, end + 1, 1):
-        print("row: " + str(row) + ", col: " + str(col) + "\n\n")
+        # print("row: " + str(row) + ", col: " + str(col) + "\n\n")
         if sheet_matrix[row][col] != "":
             total += float(sheet_matrix[row][col])
     return int(total)
@@ -347,7 +343,8 @@ def sum_cum(sheet_matrix, col, date_indices):
     return total
 
 
-test_invoice = "invoice08_06_2023.csv"
-test_pay_rep = "payRep08_06_2023.csv" 
-res = parse_pay_rep(test_pay_rep, test_invoice, "test_final.csv")
-print(res)
+# test_invoice = "invoice08_06_2023.csv"
+# test_pay_rep = "payRep08_06_2023.csv" 
+# res = parse_pay_rep(test_pay_rep, test_invoice, "test_final.csv")
+# final_excel = csv_to_excel(res)
+# print(final_excel)
