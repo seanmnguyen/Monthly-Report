@@ -1,6 +1,4 @@
 import pandas as pd
-import csv
-import os
 
 
 # converts an inputted csv file to an excel file

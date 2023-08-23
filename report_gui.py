@@ -84,11 +84,13 @@ def update_status():
     global status_num
     if status_num[CREATE_STATUS] is True:  # created successfully
         status_info_text.set("Status: report created successfully!")
+
     elif status_num[PAY_REP_STATUS] is True:
         if status_num[INVOICE_STATUS] is True:  # both true, set to "ready"
             status_info_text.set("Status: ready to create report")
         else:  # only have pay rep, missing invoice
             status_info_text.set("Status: missing invoice")
+            
     else:  # pay rep missing
         if status_num[INVOICE_STATUS] is True:  # only invoice, missing pay rep
             status_info_text.set("Status: missing pay rep")

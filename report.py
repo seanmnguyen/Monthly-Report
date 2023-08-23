@@ -1,11 +1,7 @@
-from tkinter import ttk
-from tkinter import *
-from tkinter.filedialog import askopenfile, askopenfilenames
-from datetime import datetime
 import csv
-from funcs import *
 import pay_rep
 import final
+from funcs import *
 
 DAYS = 30
 
@@ -16,15 +12,15 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
         sheet = [[""]] * (len(pd.read_csv(in_file)) + DAYS*3) # 2D matrix holding sheet data
         in_file.close()
 
-    with open("payRep08_06_2023.csv", mode='r') as in_file:
-        csv_reader = csv.reader(in_file)
-        # try:
-        #     print(in_file.readline())
-        #     csv_reader = csv.reader(in_file)
-        #     print("open successful: " + pay_rep_file)
-        # except(FileNotFoundError):
-        #     print("invalid csv file for pay rep")
-        #     return str(FileNotFoundError)
+    with open(pay_rep_file, mode='r') as in_file:
+        # csv_reader = csv.reader(in_file)
+        try:
+            print(in_file.readline())
+            csv_reader = csv.reader(in_file)
+            print("open successful: " + pay_rep_file)
+        except(FileNotFoundError):
+            print("invalid csv file for pay rep")
+            return str(FileNotFoundError)
         
         # create new file for the final spreadsheet
         try:
@@ -320,10 +316,7 @@ def end_of_date(sheet_matrix, sheet_index, date, start_date, end_date, first_day
 
 def sum_col(sheet_matrix, col, start, end):
     total = 0.0
-    # print("\n\nsheet row count: " + str(len(sheet_matrix)))
-    # print("start: " + str(start) + ", end: " + str(end))
     for row in range(start, end + 1, 1):
-        # print("row: " + str(row) + ", col: " + str(col) + "\n\n")
         if sheet_matrix[row][col] != "":
             total += float(sheet_matrix[row][col])
     return int(total)
@@ -341,10 +334,3 @@ def sum_cum(sheet_matrix, col, date_indices):
         if sheet_matrix[index][col] != "":
             total += int(sheet_matrix[index][col])
     return total
-
-
-# test_invoice = "invoice08_06_2023.csv"
-# test_pay_rep = "payRep08_06_2023.csv" 
-# res = parse_pay_rep(test_pay_rep, test_invoice, "test_final.csv")
-# final_excel = csv_to_excel(res)
-# print(final_excel)
