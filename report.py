@@ -5,9 +5,7 @@ from funcs import *
 
 DAYS = 30
 
-# TODO: when no payment in cash, check, debit, visa, master, amex, etc,
-# BUT there IS in credit card column, use that as default
-# TODO: change ints to floats
+
 def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
     # open the pay rep file using csv reader
     with open(pay_rep_file, mode='r') as in_file:
@@ -17,7 +15,6 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
     with open(pay_rep_file, mode='r') as in_file:
         # csv_reader = csv.reader(in_file)
         try:
-            # print(in_file.readline())
             csv_reader = csv.reader(in_file)
             print("open successful: " + pay_rep_file)
         except(FileNotFoundError):
@@ -133,7 +130,7 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
                     # finish parsing row, add to matrix
                     sheet[sheet_index] = row_info
                     sheet_index += 1
-                # print(sheet[sheet_index-1])
+
     # write entire sheet matrix, close files, return new sheet name
     csv_writer.writerows(sheet)
     in_file.close()
