@@ -25,6 +25,7 @@ FEES_TOTAL = 5  # U & C = Fees Total - 70 (only if Paid Ins > 0)
 PAID_INS = 12  # reimbursement
 CASH = 18
 CHECK = 19
+ALT_CREDIT_CARD = 20
 DEBIT_CARD = 33
 VISA = 34  # used for credit card along with next three
 MASTER_CARD = 35
@@ -44,7 +45,6 @@ DISCOVER = 37
 # BALANCE = 15
 # PREV_BALANCE = 16
 # PAY_TYPE = 17
-# CREDIT_CARD = 20
 # INSURANCE_PAID = 21
 # DOCTOR = 22
 # SALES_PERSON = 23

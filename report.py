@@ -5,7 +5,9 @@ from funcs import *
 
 DAYS = 30
 
-
+# TODO: when no payment in cash, check, debit, visa, master, amex, etc,
+# BUT there IS in credit card column, use that as default
+# TODO: change ints to floats
 def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
     # open the pay rep file using csv reader
     with open(pay_rep_file, mode='r') as in_file:
@@ -15,7 +17,7 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
     with open(pay_rep_file, mode='r') as in_file:
         # csv_reader = csv.reader(in_file)
         try:
-            print(in_file.readline())
+            # print(in_file.readline())
             csv_reader = csv.reader(in_file)
             print("open successful: " + pay_rep_file)
         except(FileNotFoundError):
@@ -93,6 +95,8 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
                     row_info[final.CHECK] = row[pay_rep.CHECK]
                     row_info[final.CREDIT_CARD] = parse_credit_card(row)
                     row_info[final.DEBIT] = row[pay_rep.DEBIT_CARD]
+                    if validate_payment(row_info, row):
+                        print("default payment used for: " + row_info[final.PATIENT])
                     row_info[final.REINBURSE] = row[pay_rep.PAID_INS]
                     insurance = parse_insurance(invoice, row[pay_rep.PATIENT])
                     if insurance is None:
@@ -126,9 +130,10 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
                     row_info[final.PREVIOUS_PAT] = parse_p(codes_arr)
                     row_info[final.TOTAL_PAT] = ""
 
-                # finish parsing row, add to matrix
-                sheet[sheet_index] = row_info
-                sheet_index += 1
+                    # finish parsing row, add to matrix
+                    sheet[sheet_index] = row_info
+                    sheet_index += 1
+                # print(sheet[sheet_index-1])
     # write entire sheet matrix, close files, return new sheet name
     csv_writer.writerows(sheet)
     in_file.close()
@@ -161,17 +166,18 @@ def parse_u_c(info):
     fees_total = float(info[pay_rep.FEES_TOTAL].replace(",", ''))
     paid_ins = float(info[pay_rep.PAID_INS].replace(",", ''))
     if paid_ins > 0:  # value in Paid Ins is non-zero
-        return int(fees_total) - 70
-    return int(fees_total)
+        return fees_total - 70
+    return fees_total
 
 # takes 1 row, returns the amount paid via credit card (0 possible)
 # there are 4 possible credit cards: VISA, Master, Amex, Discover
 # at most 1 will be used, but it is possible for none to be used
 def parse_credit_card(info):
+    sum = 0.0
     for i in range(pay_rep.VISA, pay_rep.DISCOVER + 1, 1):
         if float(info[i].replace(",", '')) > 0:
-            return info[i]
-    return 0
+            sum += float(info[i])
+    return sum
 
 # takes in a list of the billing codes
 # returns true if the list contains 4, 14, s0, or s1 AND
@@ -246,7 +252,7 @@ def parse_dk(codes:list):
 # takes in list of billing codes
 # returns str "1" if list contains "HMask"; empty string "" otherwise
 def parse_m(codes:list):
-    if "HMask" in codes:
+    if "Hmask" in codes:
         return "1"
     return ""
 
@@ -285,6 +291,16 @@ def parse_p(codes:list):
         return "1"
     return ""
 
+# takes sheet and current row info, checks if payment options are all 0
+# if so, check alternative credit card column for default
+def validate_payment(curr_row, pay_rep_row):
+    if float(curr_row[final.CASH]) == 0 and float(curr_row[final.CHECK]) == 0 and float(curr_row[final.CREDIT_CARD]) == 0 and float(curr_row[final.DEBIT]) == 0:
+        alt_payment = float(pay_rep_row[pay_rep.ALT_CREDIT_CARD])
+        if alt_payment > 0:
+            curr_row[final.CREDIT_CARD] = alt_payment
+            return True
+    return False
+
 def end_of_date(sheet_matrix, sheet_index, date, start_date, end_date, first_day, date_list):
     day_total = [""] * final.NUM_COLS
     day_total[final.PATIENT] = date
@@ -319,18 +335,18 @@ def sum_col(sheet_matrix, col, start, end):
     for row in range(start, end + 1, 1):
         if sheet_matrix[row][col] != "":
             total += float(sheet_matrix[row][col])
-    return int(total)
+    return total
 
 def sum_row(row, start, end):
     total = 0
     for col in range(start, end + 1, 1):
         if row[col] != "":
-            total += int(row[col])
+            total += float(row[col])
     return total
 
 def sum_cum(sheet_matrix, col, date_indices):
     total = 0
     for index in date_indices:
         if sheet_matrix[index][col] != "":
-            total += int(sheet_matrix[index][col])
+            total += float(sheet_matrix[index][col])
     return total
