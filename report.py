@@ -46,7 +46,7 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
         for row in csv_reader:
             # error checks input file, compares number of columns
             if not col_check and len(row) < pay_rep.NUM_COLS:
-                print("parse_pay_rep --> file column nums mismatch: " + pay_rep)
+                print("parse_pay_rep --> file column nums mismatch: " + pay_rep_file)
                 in_file.close()
                 out_file.close()
                 return None

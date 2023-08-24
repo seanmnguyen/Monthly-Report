@@ -1,4 +1,4 @@
-NUM_COLS = 60  # number of columns in pay rep sheet
+NUM_COLS = 37  # number of columns in pay rep sheet
 
 # constants for the index of each column in the pay rep sheet
 DATE = 0
