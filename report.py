@@ -67,14 +67,14 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
                     if date != temp:  # new date --> insert old date + blank line
                         date_indices.append(date_end + 1)
                         if first_day:
-                            end_of_date(sheet, sheet_index, date, date_start, date_end, True, date_indices)
+                            end_of_date(sheet, sheet_index, date, str(date_start+2), str(date_end+2), True, date_indices)
                             first_day = False
                             # reset day index counter
                             date_start = date_end + 3  # skip day total and line space
                             date_end += 3
                             sheet_index += 2
                         else:
-                            end_of_date(sheet, sheet_index, date, date_start, date_end, False, date_indices)
+                            end_of_date(sheet, sheet_index, date, str(date_start+2), str(date_end+2), False, date_indices)
                             # reset day index counter
                             date_start = date_end + 4  # skip day total, cum total, and line space
                             date_end += 4
@@ -298,33 +298,57 @@ def validate_payment(curr_row, pay_rep_row):
             return True
     return False
 
-def end_of_date(sheet_matrix, sheet_index, date, start_date, end_date, first_day, date_list):
+# after the last person for a day, sum up all the values from U & C to Reinbursement, along with Glasses to Previous Patient
+# then, if the day is not the first day of the month, make a cumulative sum row, combining the sums from every day before
+def end_of_date(sheet_matrix, sheet_index, date, start_date: str, end_date: str, first_day, date_list):
     day_total = [""] * final.NUM_COLS
-    day_total[final.PATIENT] = date
-    for col in range(final.U_C, final.REINBURSE + 1, 1):
-        day_total[col] = sum_col(sheet_matrix, col, start_date, end_date)
-    day_total[final.REFUND] = sum_col(sheet_matrix, final.REFUND, start_date, end_date)
-    day_total[final.TOTAL] = sum_row(day_total, final.CASH, final.REINBURSE)
-    
-    for col in range(final.GLASSES, final.PREVIOUS_PAT + 1, 1):
-        day_total[col] = sum_col(sheet_matrix, col, start_date, end_date)
-    day_total[final.TOTAL_PAT] = day_total[final.GLASSES] + day_total[final.CONTACTS]
+    day_total[final.PATIENT] = date  # set column 0 to the date
+    for col in range(final.U_C, final.REINBURSE + 1, 1):  # sum columns from U&C to Reinbursement
+        day_total[col] = "=SUM(" + COL_LETTERS[col] + start_date + ":" + COL_LETTERS[col] + end_date + ")"
+    day_total[final.REFUND] = "=SUM(" + COL_LETTERS[final.REFUND] + start_date + ":" + COL_LETTERS[final.REFUND] + end_date + ")"
+    day_total_row = str(int(end_date) + 1)
+    day_total[final.TOTAL] = "=SUM(" + COL_LETTERS[final.CASH] + day_total_row + ":" + COL_LETTERS[final.REINBURSE] + day_total_row + ")"
 
+    # sum columns from Glasses to Previous Patient
+    for col in range(final.GLASSES, final.PREVIOUS_PAT + 1, 1):
+        day_total[col] = "=SUM(" + COL_LETTERS[col] + start_date + ":" + COL_LETTERS[col] + end_date + ")"
+    day_total[final.TOTAL_PAT] = "=SUM(" + COL_LETTERS[final.GLASSES] + day_total_row + ":" + COL_LETTERS[final.CONTACTS] + day_total_row + ")"
+
+    # add day total row into matrix
     sheet_matrix[sheet_index] = day_total
     sheet_index += 1
 
-    if not first_day:  # not first day, add cumlative row
+    # not first day, add cumlative row
+    if not first_day:
         cum_total = [""] * final.NUM_COLS
-        for col in range(final.U_C, final.REINBURSE + 1, 1):
-            cum_total[col] = sum_cum(sheet_matrix, col, date_list)
-        cum_total[final.REFUND] = sum_cum(sheet_matrix, final.REFUND, date_list)
-        cum_total[final.TOTAL] = sum_row(cum_total, final.CASH, final.REINBURSE)
+        for col in range(final.U_C, final.REINBURSE + 1, 1):  # sum columns from U&C to Reinbursement
 
-        for col in range(final.GLASSES, final.PREVIOUS_PAT + 1, 1):
-            cum_total[col] = sum_cum(sheet_matrix, col, date_list)
-        cum_total[final.TOTAL_PAT] = cum_total[final.GLASSES] + cum_total[final.CONTACTS]
+    # day_total = [""] * final.NUM_COLS
+    # day_total[final.PATIENT] = date
+    # for col in range(final.U_C, final.REINBURSE + 1, 1):
+    #     day_total[col] = sum_col(sheet_matrix, col, start_date, end_date)
+    # day_total[final.REFUND] = sum_col(sheet_matrix, final.REFUND, start_date, end_date)
+    # day_total[final.TOTAL] = sum_row(day_total, final.CASH, final.REINBURSE)
+    
+    # for col in range(final.GLASSES, final.PREVIOUS_PAT + 1, 1):
+    #     day_total[col] = sum_col(sheet_matrix, col, start_date, end_date)
+    # day_total[final.TOTAL_PAT] = day_total[final.GLASSES] + day_total[final.CONTACTS]
 
-        sheet_matrix[sheet_index] = cum_total
+    # sheet_matrix[sheet_index] = day_total
+    # sheet_index += 1
+
+    # if not first_day:  # not first day, add cumlative row
+    #     cum_total = [""] * final.NUM_COLS
+    #     for col in range(final.U_C, final.REINBURSE + 1, 1):
+    #         cum_total[col] = sum_cum(sheet_matrix, col, date_list)
+    #     cum_total[final.REFUND] = sum_cum(sheet_matrix, final.REFUND, date_list)
+    #     cum_total[final.TOTAL] = sum_row(cum_total, final.CASH, final.REINBURSE)
+
+    #     for col in range(final.GLASSES, final.PREVIOUS_PAT + 1, 1):
+    #         cum_total[col] = sum_cum(sheet_matrix, col, date_list)
+    #     cum_total[final.TOTAL_PAT] = cum_total[final.GLASSES] + cum_total[final.CONTACTS]
+
+    #     sheet_matrix[sheet_index] = cum_total
 
 
 def sum_col(sheet_matrix, col, start, end):

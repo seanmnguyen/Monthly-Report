@@ -1,5 +1,6 @@
 import pandas as pd
 
+COL_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
 # converts an inputted csv file to an excel file
 def csv_to_excel(csv_file, excel_name="Monthly Report.xlsx"):
