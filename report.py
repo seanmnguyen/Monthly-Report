@@ -172,7 +172,7 @@ def parse_credit_card(info):
     sum = 0.0
     for i in range(pay_rep.VISA, pay_rep.DISCOVER + 1, 1):
         if float(info[i].replace(",", '')) > 0:
-            sum += float(info[i])
+            sum += float(info[i].replace(",", ''))
     return sum
 
 # takes in a list of the billing codes
@@ -290,8 +290,8 @@ def parse_p(codes:list):
 # takes sheet and current row info, checks if payment options are all 0
 # if so, check alternative credit card column for default
 def validate_payment(curr_row, pay_rep_row):
-    if float(curr_row[final.CASH]) == 0 and float(curr_row[final.CHECK]) == 0 and float(curr_row[final.CREDIT_CARD]) == 0 and float(curr_row[final.DEBIT]) == 0:
-        alt_payment = float(pay_rep_row[pay_rep.ALT_CREDIT_CARD])
+    if float(curr_row[final.CASH].replace(",", '')) == 0 and float(curr_row[final.CHECK].replace(",", '')) == 0 and float(curr_row[final.CREDIT_CARD].replace(",", '')) == 0 and float(curr_row[final.DEBIT].replace(",", '')) == 0:
+        alt_payment = float(pay_rep_row[pay_rep.ALT_CREDIT_CARD].replace(",", ''))
         if alt_payment > 0:
             curr_row[final.CREDIT_CARD] = alt_payment
             return True
