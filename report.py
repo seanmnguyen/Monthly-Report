@@ -157,12 +157,12 @@ def parse_insurance(invoice_sheet, pat_name):
     return None
 
 # takes 1 row of information, returns the Fees Total column
-# but, if the value in Paid Ins is non-zero, returns Fees Total - 70
+# but, if the value in Paid Ins is non-zero, returns Fees Total - 74
 def parse_u_c(info):
     fees_total = float(info[pay_rep.FEES_TOTAL].replace(",", ''))
     paid_ins = float(info[pay_rep.PAID_INS].replace(",", ''))
     if paid_ins > 0:  # value in Paid Ins is non-zero
-        return fees_total - 70
+        return fees_total - 74
     return fees_total
 
 # takes 1 row, returns the amount paid via credit card (0 possible)
