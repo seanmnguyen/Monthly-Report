@@ -1,8 +1,9 @@
 # header for the final spreadsheet
-HEADER = ["Patients", "U & C", "CA", "CK", "CC", "DB", "RB", 
-                "INS", "RF", "Total", "G", "C", "I", "D", "T", "F", 
-                "O", "L", "DK", "M", "S", "D3", "AO", "N", "P", "T"]
-NUM_COLS = 26  # number of columns in final sheet
+HEADER = ["Patients", "U & C", "CA", "CK", "CC", "DB", "RB", "INS",
+                "IW", "RF", "Total", "G", "C", "I", "D", "T", "F", 
+                "O", "L", "DK", "M", "S", "D3", "D3L", "GT", "GTL", 
+                "OR", "OI", "OM", "OA", "ON", "OT", "N", "P", "T"]
+NUM_COLS = 35  # number of columns in final sheet
 
 # constannts for the index of each column in the final report sheet
 PATIENT = 0
@@ -13,21 +14,30 @@ CREDIT_CARD = 4  # CC
 DEBIT = 5  # DB
 REINBURSE = 6  # RB
 INS = 7  # INS --> from invoice sheet
-REFUND = 8  # RF --> leave blank
-TOTAL = 9  # TOTAL --> leave blank
-GLASSES = 10  # G --> 4, 14, s0, s1 Billing Codes
-CONTACTS = 11  # C
-IMAGE = 12  # I --> OPTOS
-DILATION = 13  # D --> DIL
-TOPOGRAPHY = 14  # T --> Topo
-FITTING = 15  # F --> SPH, PREM, STY, or CUS w/o 4, 14, s0, or s1
-OFFICE_VISIT = 16  # O
-LASIK = 17  # L
-DRY_EYE_KIT = 18  # DK
-MASK = 19  # M
-SPRAY = 20  # S
-D3 = 21  # D3
-OA = 22  # OA
-NEW_PAT = 23  # N
-PREVIOUS_PAT = 24  # P
-TOTAL_PAT = 25  # T
+IW = 8  # IW --> U&C - TOTAL
+REFUND = 9  # RF --> leave blank
+TOTAL = 10  # TOTAL --> leave blank
+GLASSES = 11  # G --> 4, 14, s0, s1 Billing Codes
+CONTACTS = 12  # C
+IMAGE = 13  # I --> OPTOS
+DILATION = 14  # D --> DIL
+TOPOGRAPHY = 15  # T --> Topo
+FITTING = 16  # F --> SPH, PREM, STY, or CUS w/o 4, 14, s0, or s1
+OFFICE_VISIT = 17  # O
+LASIK = 18  # L
+DRY_EYE_KIT = 19  # DK
+MASK = 20  # M
+SPRAY = 21  # S
+D3 = 22  # D3
+D3L = 23  # D3L --> De3L billing code
+GT = 24  # GT --> GTT billing code
+GTL = 25  # GTL --> GTTL billing code
+OR = 26  # OR --> OHR billing code
+OI = 27  # OI --> OI billing code
+OM = 28  # OM --> OM billing code
+OA = 29  # OA --> OA billing code
+ON = 30  # ON --> OHN billing code
+OT = 31  # OT --> OATP billing code
+NEW_PAT = 32  # N
+PREVIOUS_PAT = 33  # P
+TOTAL_PAT = 34  # T

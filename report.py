@@ -5,11 +5,14 @@ from funcs import *
 
 DAYS = 30
 
+'''STEPS TO CREATE EXECUTABLE FILE
+1) 
+'''
 
 def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
     # open the pay rep file using csv reader
     with open(pay_rep_file, mode='r') as in_file:
-        sheet = [[""]] * (len(pd.read_csv(in_file)) + DAYS*3) # 2D matrix holding sheet data
+        sheet = [[""]] * (len(pd.read_csv(in_file)) + DAYS*4) # 2D matrix holding sheet data
         in_file.close()
 
     with open(pay_rep_file, mode='r') as in_file:
@@ -99,8 +102,12 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
                         print(row[pay_rep.PATIENT] + ": insurance not found")
                         return None
                     row_info[final.INS] = insurance  # from invoice sheet
+                    row_info[final.IW] = ""
                     row_info[final.REFUND] = ""
-                    row_info[final.TOTAL] = ""
+                    row_info[final.TOTAL] = parse_total(row_info)
+                    # refill IW after total calculated
+                    row_info[final.IW] = parse_iw(row_info)
+
                     # info using billing codes below
                     codes = row[pay_rep.BILLING_CODES]
                     codes_arr = codes.split("|")
@@ -121,11 +128,18 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
                     row_info[final.MASK] = parse_m(codes_arr)
                     row_info[final.SPRAY] = parse_s(codes_arr)
                     row_info[final.D3] = parse_d3(codes_arr)
+                    row_info[final.D3L] = parse_d3l(codes_arr)  # new additions
+                    row_info[final.GT] = parse_gt(codes_arr)
+                    row_info[final.GTL] = parse_gtl(codes_arr)
+                    row_info[final.OR] = parse_or(codes_arr)
+                    row_info[final.OI] = parse_oi(codes_arr)
+                    row_info[final.OM] = parse_om(codes_arr)
                     row_info[final.OA] = parse_oa(codes_arr)
+                    row_info[final.ON] = parse_on(codes_arr)  # end of new additions
+                    row_info[final.OT] = parse_ot(codes_arr)
                     row_info[final.NEW_PAT] = parse_n(codes_arr)
                     row_info[final.PREVIOUS_PAT] = parse_p(codes_arr)
                     row_info[final.TOTAL_PAT] = ""
-
                     # finish parsing row, add to matrix
                     sheet[sheet_index] = row_info
                     sheet_index += 1
@@ -174,6 +188,19 @@ def parse_credit_card(info):
         if float(info[i].replace(",", '')) > 0:
             sum += float(info[i].replace(",", ''))
     return sum
+
+# takes 1 row_info, that is the partially filled row array, 
+# returns the U&C - TOTAL
+def parse_iw(row_info):
+    return str(float(row_info[final.U_C]) - float(row_info[final.TOTAL]))
+
+# takes 1 row_info, that is the partially filled row array,
+# returns the sum of column C to column G (CA + CK + CC + DB + RB) as a string
+def parse_total(row_info):
+    sum = 0
+    for i in range(2, 7):
+        sum += float(row_info[i])
+    return str(sum)
 
 # takes in a list of the billing codes
 # returns true if the list contains 4, 14, s0, or s1 AND
@@ -267,8 +294,64 @@ def parse_d3(codes:list):
     return ""
 
 # takes in list of billing codes
-# returns str "1" if list contains "OATP"; empty string "" otherwise
+# returns str "1" if list contains "De3L"; empty string "" otherwise
+def parse_d3l(codes:list):
+    if "De3L" in codes:
+        return "1"
+    return ""
+
+# takes in list of billing codes
+# returns str "1" if list contains "GTT"; empty string "" otherwise
+def parse_gt(codes:list):
+    if "GTT" in codes:
+        return "1"
+    return ""
+
+# takes in list of billing codes
+# returns str "1" if list contains "GTTL"; empty string "" otherwise
+def parse_gtl(codes:list):
+    if "GTTL" in codes:
+        return "1"
+    return ""
+
+# takes in list of billing codes
+# returns str "1" if list contains "OHR"; empty string "" otherwise
+def parse_or(codes:list):
+    if "OHR" in codes:
+        return "1"
+    return ""
+
+# takes in list of billing codes
+# returns str "1" if list contains "OI"; empty string "" otherwise
+def parse_oi(codes:list):
+    if "OI" in codes:
+        return "1"
+    return ""
+
+# takes in list of billing codes
+# returns str "1" if list contains "OM"; empty string "" otherwise
+def parse_om(codes:list):
+    if "OM" in codes:
+        return "1"
+    return ""
+
+# takes in list of billing codes
+# returns str "1" if list contains "OA"; empty string "" otherwise
 def parse_oa(codes:list):
+    if "OA" in codes:
+        return "1"
+    return ""
+
+# takes in list of billing codes
+# returns str "1" if list contains "OHN"; empty string "" otherwise
+def parse_on(codes:list):
+    if "OHN" in codes:
+        return "1"
+    return ""
+
+# takes in list of billing codes
+# returns str "1" if list contains "OATP"; empty string "" otherwise
+def parse_ot(codes:list):
     if "OATP" in codes:
         return "1"
     return ""
