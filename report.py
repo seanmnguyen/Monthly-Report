@@ -90,13 +90,13 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
                 if name != "Totals":  # check name first to see if at the end of the file
                     row_info[final.PATIENT] = name
                     row_info[final.U_C] = parse_u_c(row)
-                    row_info[final.CASH] = row[pay_rep.CASH]
-                    row_info[final.CHECK] = row[pay_rep.CHECK]
+                    row_info[final.CASH] = string_to_float(row[pay_rep.CASH])
+                    row_info[final.CHECK] = string_to_float(row[pay_rep.CHECK])
                     row_info[final.CREDIT_CARD] = parse_credit_card(row)
-                    row_info[final.DEBIT] = row[pay_rep.DEBIT_CARD]
+                    row_info[final.DEBIT] = string_to_float(row[pay_rep.DEBIT_CARD])
                     if validate_payment(row_info, row):
                         print("default payment used for: " + row_info[final.PATIENT])
-                    row_info[final.REINBURSE] = row[pay_rep.PAID_INS]
+                    row_info[final.REINBURSE] = string_to_float(row[pay_rep.PAID_INS])
                     insurance = parse_insurance(invoice, row[pay_rep.PATIENT])
                     if insurance is None:
                         print(row[pay_rep.PATIENT] + ": insurance not found")
@@ -195,12 +195,12 @@ def parse_iw(row_info):
     return str(float(row_info[final.U_C]) - float(row_info[final.TOTAL]))
 
 # takes 1 row_info, that is the partially filled row array,
-# returns the sum of column C to column G (CA + CK + CC + DB + RB) as a string
+# returns the sum of column C to column G (CA + CK + CC + DB + RB) 
 def parse_total(row_info):
     sum = 0
     for i in range(2, 7):
-        sum += float(row_info[i])
-    return str(sum)
+        sum += row_info[i]
+    return sum
 
 # takes in a list of the billing codes
 # returns true if the list contains 4, 14, s0, or s1 AND
@@ -370,11 +370,16 @@ def parse_p(codes:list):
         return "1"
     return ""
 
+# takes a string representing a number
+# returns a float
+def string_to_float(num:str) -> float:
+    return float(num.replace(",", ''))
+
 # takes sheet and current row info, checks if payment options are all 0
 # if so, check alternative credit card column for default
 # note, credit card is already a float, no need to cast or replace commas
 def validate_payment(curr_row, pay_rep_row):
-    if float(curr_row[final.CASH].replace(",", '')) == 0 and float(curr_row[final.CHECK].replace(",", '')) == 0 and float(curr_row[final.CREDIT_CARD]) == 0 and float(curr_row[final.DEBIT].replace(",", '')) == 0:
+    if curr_row[final.CASH] == 0 and curr_row[final.CHECK] == 0 and curr_row[final.CREDIT_CARD] == 0 and curr_row[final.DEBIT] == 0:
         alt_payment = float(pay_rep_row[pay_rep.ALT_CREDIT_CARD].replace(",", ''))
         if alt_payment > 0:
             curr_row[final.CREDIT_CARD] = alt_payment
