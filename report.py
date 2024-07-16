@@ -324,14 +324,14 @@ def parse_or(codes:list):
 # takes in list of billing codes
 # returns str "1" if list contains "OI"; empty string "" otherwise
 def parse_oi(codes:list):
-    if "OI" in codes:
+    if "OHI" in codes:
         return "1"
     return ""
 
 # takes in list of billing codes
 # returns str "1" if list contains "OM"; empty string "" otherwise
 def parse_om(codes:list):
-    if "OM" in codes:
+    if "OMGD" in codes:
         return "1"
     return ""
 
