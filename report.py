@@ -154,8 +154,9 @@ def parse_pay_rep(pay_rep_file, invoice, final_name="Monthly Report Final.csv"):
 # takes invoice file name and patient's name
 # returns the insurance type for the patient
 def parse_insurance(invoice_sheet, pat_name):
-    name_col = 1  # column index for patient name
-    ins_col = 4  # column index for patient insurance
+    # name_col = 1  # column index for patient name
+    # ins_col = 6  # column index for patient insurance
+    name_col, ins_col = get_invoice_patient_and_ins(invoice_sheet)
 
     with open(invoice_sheet, mode='r') as in_file:
         try:
@@ -169,6 +170,30 @@ def parse_insurance(invoice_sheet, pat_name):
                 return row[ins_col]
 
     return None
+
+# takes invoice file name
+# returns the indices for the patient column and INS column
+def get_invoice_patient_and_ins(invoice_sheet):
+    patient_col, ins_col = -1, -1
+
+    with open(invoice_sheet, mode='r') as in_file:
+        try:
+            invoice_reader = csv.reader(in_file)
+        except FileNotFoundError as e:
+            print("invalid invoice file in get_invoice_patient_and_ins")
+            return str(e)
+    
+        header_line = next(invoice_reader)
+        for index, column_name in enumerate(header_line):
+            if column_name.lower().strip() == "patient":
+                patient_col = index
+            elif column_name.lower().strip() == "ins":
+                ins_col = index
+            
+            # break condition, both columns found
+            if patient_col >= 0 and ins_col >= 0:
+                break
+        return patient_col, ins_col
 
 # takes 1 row of information, returns the Fees Total column
 # but, if the value in Paid Ins is non-zero, returns Fees Total - 74
