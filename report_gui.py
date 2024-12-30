@@ -1,4 +1,5 @@
 import os
+import sys
 from tkinter import *
 from tkinter import ttk
 from tkinter.filedialog import askopenfile
@@ -27,6 +28,13 @@ def create_report():
         return
     
     # determine report file name
+    # Step 1: get the base directory path
+    if getattr(sys, 'frozen', False):
+        base_dir = os.path.dirname(sys.executable)
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Step 2: append the inputtted name and extension
     new_name = name_input.get()
     new_name = new_name.split(".")[0]
     if new_name == NAME_PROMPT or new_name == "":
@@ -37,12 +45,14 @@ def create_report():
         csv_name = new_name + ".csv"
         xlsx_name = new_name + ".xlsx"
 
-    report_csv = parse_pay_rep(pay_rep_name, invoice_name, final_name=csv_name)
-    report_xlsx = csv_to_excel(report_csv, excel_name=xlsx_name)
+    csv_path = os.path.join(base_dir, csv_name)
+    xlsx_path = os.path.join(base_dir, xlsx_name)
+    report_csv = parse_pay_rep(pay_rep_name, invoice_name, final_name=csv_path)
+    report_xlsx = csv_to_excel(report_csv, xlsx_path, excel_name=xlsx_name)
     print(report_xlsx + " successfully created!")
 
     # clean up: delete intermediate csv file
-    os.remove(csv_name)
+    os.remove(csv_path)
 
     status_num[CREATE_STATUS] = True
     update_status()  # updates the status text field
@@ -52,7 +62,7 @@ def create_report():
 # opens file explorer, lets user select csv file for pay rep
 def select_pay_rep():
     global status_num
-    file = askopenfile(parent=root, mode="r", title="Choose a file", filetype=[("CSV file", "*.csv")])
+    file = askopenfile(parent=root, mode="r", title="Choose a file", filetypes=[("CSV file", "*.csv")])
     if file:
         pay_rep_text.set(file.name)
         status_num[PAY_REP_STATUS] = True 
@@ -64,7 +74,7 @@ def select_pay_rep():
 # opens file explorer, lets user select csv file for invoice
 def select_invoice():
     global status_num
-    file = askopenfile(parent=root, mode="r", title="Choose a file", filetype=[("CSV file", "*.csv")])
+    file = askopenfile(parent=root, mode="r", title="Choose a file", filetypes=[("CSV file", "*.csv")])
     if file:
         invoice_text.set(file.name)
         status_num[INVOICE_STATUS] = True
@@ -110,8 +120,10 @@ def reset_fields():
 
 # create the GUI
 root = Tk()
-frame = ttk.Frame(root, height=350, width=850, padding=15)
-frame.grid(rowspan=5, columnspan=4)
+root.title("Monthly Report Parser")
+root.geometry("850x350")  # Explicit window size for testing
+# frame = ttk.Frame(root, height=350, width=850, padding=15)
+# frame.grid(rowspan=5, columnspan=4)
 root.rowconfigure(0, minsize=60, pad=30)
 root.columnconfigure(0, minsize=5, pad=10)
 root.columnconfigure(1, minsize=80, pad=10)
@@ -119,7 +131,8 @@ root.columnconfigure(2, minsize=80, pad=10)
 root.columnconfigure(3, minsize=80, pad=10)
 
 # title text
-title = ttk.Label(root, text="Monthly Report Parsers", font=("Helvectia", 30, "bold")).grid(row=0, column=0, columnspan=4)
+title = ttk.Label(root, text="Monthly Report Parsers", font=("Helvetica", 30, "bold"))
+title.grid(row=0, column=0, columnspan=4)
 
 # button for pay rep file
 pay_rep_btn = ttk.Button(root, text="Pay Rep", command=select_pay_rep, padding=10)
@@ -128,7 +141,7 @@ pay_rep_btn.grid(row=1, column=0)
 # text field for pay rep file
 pay_rep_text = StringVar()
 pay_rep_text.set(PAY_REP_PROMPT)
-pay_rep_lbl = ttk.Label(root, textvariable=pay_rep_text, font=("Helvectia", 15))
+pay_rep_lbl = ttk.Label(root, textvariable=pay_rep_text, font=("Helvetica", 15))
 pay_rep_lbl.grid(row=1, column=1, columnspan=3)
 
 # button for invoice file
@@ -138,13 +151,13 @@ invoice_btn.grid(row=2, column=0)
 # text field for invoice file
 invoice_text = StringVar()
 invoice_text.set(INVOICE_PROMPT)
-invoice_lbl = ttk.Label(root, textvariable=invoice_text, font=("Helvectia", 15))
+invoice_lbl = ttk.Label(root, textvariable=invoice_text, font=("Helvetica", 15))
 invoice_lbl.grid(row=2, column=1, columnspan=3)
 
 # text entry for the name of the new report
 name_text = StringVar()
 name_text.set(NAME_PROMPT)
-name_input = ttk.Entry(root, textvariable=name_text, width=75, font=("Helvectia", 12))
+name_input = ttk.Entry(root, textvariable=name_text, width=75, font=("Helvetica", 12))
 name_input.grid(row=3, column=0, columnspan=4)
 name_input.bind("<Button-1>", erase_entry)  # makes text disappear when clicked on
 
@@ -155,7 +168,7 @@ create_btn.grid(row=4, column=1)
 # status label
 status_info_text = StringVar()
 status_info_text.set("Status: select files")
-status_lbl = ttk.Label(root, textvariable=status_info_text, font=("Helvectia", 12, "italic"))
+status_lbl = ttk.Label(root, textvariable=status_info_text, font=("Helvetica", 12, "italic"))
 status_lbl.grid(row=4, column=0)
 
 # clear button: resets pay rep, invoice, and name entry text fields to default prompts

@@ -3,10 +3,10 @@ import pandas as pd
 COL_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI']
 
 # converts an inputted csv file to an excel file
-def csv_to_excel(csv_file, excel_name="Monthly Report.xlsx"):
+def csv_to_excel(csv_file, excel_path, excel_name="Monthly Report.xlsx"):
     reader = pd.read_csv(csv_file)
-    reader.to_excel(excel_name, sheet_name=excel_name, index=False)
-    return excel_name
+    reader.to_excel(excel_path, sheet_name=excel_name, index=False)
+    return excel_path
 
 
 # converts an inputted excel file to a csv file
