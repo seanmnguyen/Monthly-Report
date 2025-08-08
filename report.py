@@ -1,6 +1,7 @@
 import csv
 import pay_rep
 import final
+import datetime
 from funcs import *
 
 DAYS = 30
@@ -415,7 +416,7 @@ def validate_payment(curr_row, pay_rep_row):
 # then, if the day is not the first day of the month, make a cumulative sum row, combining the sums from every day before
 def end_of_date(sheet_matrix, sheet_index, date, start_date: str, end_date: str, first_day, prev_cum):
     day_total = [""] * final.NUM_COLS
-    day_total[final.PATIENT] = date  # set column 0 to the date
+    day_total[final.PATIENT] = format_date(date)  # set column 0 to the date
     for col in range(final.U_C, final.REINBURSE + 1, 1):  # sum columns from U&C to Reinbursement
         day_total[col] = "=SUM(" + COL_LETTERS[col] + start_date + ":" + COL_LETTERS[col] + end_date + ")"
     day_total[final.REFUND] = "=SUM(" + COL_LETTERS[final.REFUND] + start_date + ":" + COL_LETTERS[final.REFUND] + end_date + ")"
@@ -450,3 +451,10 @@ def end_of_date(sheet_matrix, sheet_index, date, start_date: str, end_date: str,
 # creates the formula for the cumulative sum for a given letter column
 def sum_cum(letter: str, prev_cum: str, curr_cum: str):
     return "=" + letter + prev_cum + "+" + letter + curr_cum
+
+# takes a date MM/DD/YYYY and returns MM/DD DAY_OF_WEEK (abbreviated)
+def format_date(date_str: str) -> str:
+    date_split = date_str.split('/')
+    month, day, year = (int(x) for x in date_split)
+    new_date = datetime.date(year, month, day)
+    return new_date.strftime("%-m/%-d %a")  # MM/DD DAY_OF_WEEK

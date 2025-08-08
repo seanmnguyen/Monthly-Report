@@ -1,9 +1,9 @@
 import os
 import sys
+import datetime
 from tkinter import *
 from tkinter import ttk
 from tkinter.filedialog import askopenfile
-from datetime import datetime
 from report import *
 
 PAY_REP_PROMPT = "<---- Select a Pay Rep File For The Month"
@@ -34,11 +34,11 @@ def create_report():
     else:
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Step 2: append the inputtted name and extension
+    # Step 2: append the inputted name and extension
     new_name = name_input.get()
     new_name = new_name.split(".")[0]
     if new_name == NAME_PROMPT or new_name == "":
-        time = datetime.now().strftime("%m-%d-%Y %H_%M_%S")
+        time = datetime.datetime.now().strftime("%m-%d-%Y %H_%M_%S")
         csv_name = str(time) + ".csv"
         xlsx_name = str(time) + ".xlsx"
     else:
